@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,16 +10,43 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile, UseInterceptors
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
+import * as fs from 'fs';
 
 @Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        callback(null, uniqueSuffix + extname(file.originalname));
+      },
+    }),
+    fileFilter: (req, file, callback) => {
+      if (file.mimetype !== 'application/pdf') {
+        return callback(new Error('Only PDF files are allowed!'), false);
+      }
+      callback(null, true);
+    },
+  }
+))
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return { message: 'File uploaded successfully!', file: file.filename };
+  }
+
+
   // 1️⃣ Create Admin
-  @Post()
+  @Post('create')
   create(@Body() dto: CreateAdminDto) {
     return this.adminService.create(dto);
   }
