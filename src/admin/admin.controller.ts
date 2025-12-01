@@ -65,10 +65,7 @@ export class AdminController {
   }
 
   // 4️⃣ Get Admin by Email
-  @Get('search/by-email')
-  findByEmail(@Query('email') email: string) {
-    return this.adminService.findByEmail(email);
-  }
+ 
 
   // 5️⃣ Update Admin (PUT)
   @Put(':id')
